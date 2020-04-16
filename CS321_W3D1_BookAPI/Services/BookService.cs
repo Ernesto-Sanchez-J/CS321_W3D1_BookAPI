@@ -1,63 +1,69 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using CS321_W3D1_BookAPI.Data;
+﻿using CS321_W3D1_BookAPI.Data;
 using CS321_W3D1_BookAPI.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CS321_W3D1_BookAPI.Services
 {
     public class BookService : IBookService
     {
-
         private readonly BookContext _bookContext;
 
-        public BookService(/* TODO: add a parameter so BookContext can be injected */)
+        private int _nextId;
+
+        public BookService(BookContext bookContext)
         {
-            // TODO: keep a reference to the BookContext in _bookContext
+            _bookContext = bookContext;
         }
 
-        public Book Add(Book book)
+        public void Delete(Book deletedBook)
         {
-            // TODO: implement add
+            _bookContext.Remove(deletedBook);
+
+            _bookContext.SaveChanges();
         }
 
-        public Book Get(int id)
+        public Book Get(int bookId)
         {
-            // TODO: return the specified Book using Find()
+            return _bookContext.Books.FirstOrDefault(b => b.Id == bookId);
         }
 
         public IEnumerable<Book> GetAll()
         {
-            // TODO: return all Books using ToList()
+            return _bookContext.Books.ToList();
+        }
+
+        public Book Post(Book newBook)
+        {
+            newBook.Id = _nextId++;
+
+            _bookContext.Add(newBook);
+
+            _bookContext.SaveChanges();
+
+            return newBook;
         }
 
         public Book Update(Book updatedBook)
         {
-            // get the ToDo object in the current list with this id 
-            var currentBook = _bookContext.Books.Find(updatedBook.Id);
+            //hold book that is needing to be updated by the Id
+            var currentBook = this.Get(updatedBook.Id);
 
-            // return null if todo to update isn't found
-            if (currentBook == null) return null;
+            if (updatedBook.Id == null) return null;
+            
+               
+            
 
-            // NOTE: This method is already completed for you, but note
-            // how the property values are copied below.
+            //assign all new properties to the selected book
+            currentBook.Title = updatedBook.Title;
+            currentBook.Author = updatedBook.Author;
+            currentBook.Category = updatedBook.Category;
 
-            // copy the property values from the changed todo into the
-            // one in the db. NOTE that this is much simpler than individually
-            // copying each property.
-            _bookContext.Entry(currentBook)
-                .CurrentValues
-                .SetValues(updatedBook);
-
-            // update the todo and save
-            _bookContext.Books.Update(currentBook);
             _bookContext.SaveChanges();
+
+            //return the book
             return currentBook;
         }
-
-        public void Remove(Book book)
-        {
-            // TODO: remove the book
-        }
-
     }
 }

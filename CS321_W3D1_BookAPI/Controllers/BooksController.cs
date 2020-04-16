@@ -1,6 +1,10 @@
 ﻿using CS321_W3D1_BookAPI.Models;
 using CS321_W3D1_BookAPI.Services;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CS321_W3D1_BookAPI.Controllers
 {
@@ -10,43 +14,69 @@ namespace CS321_W3D1_BookAPI.Controllers
     {
         private readonly IBookService _bookService;
 
-        // Constructor
-        public BooksController(/* TODO: inject IBookService */)
+        public BooksController(IBookService bookService)
         {
-            // TODO: keep a reference to the service so we can use below
+            _bookService = bookService;
+        }
+        [HttpGet]
+        public IActionResult Get()
+        {
+            return Ok(_bookService.GetAll());
         }
 
-        // TODO: get all books
-        // GET api/books
+        // GET api/books/5
+        [HttpGet("{id}")]
+        public ActionResult<string> Get(int id)
+        {
+            //variable book, holds book data from database
+            var book = _bookService.Get(id);
 
-        // get specific book by id
-        // GET api/books/:id
+            //if var book has no value, return  404 Not Found
+            if (book == null) return NotFound();
 
-        // create a new book
-        // POST api/books
+            //otherwise, return 200 OK message and the data within var book
+            return Ok(book);
+        }
+
+        // POST api/values
         [HttpPost]
-        public IActionResult Post([FromBody] Book newBook)
+        public IActionResult Post([FromBody] Book book)
         {
             try
             {
-                // add the new book
-                _bookService.Add(newBook);
+                _bookService.Post(book);
             }
-            catch (System.Exception ex)
+            catch(System.Exception ex)
             {
-                ModelState.AddModelError("AddBook", ex.Message);
+                ModelState.AddModelError("Add Book", ex.Message);
                 return BadRequest(ModelState);
             }
-
-            // return a 201 Created status. This will also add a "location" header
-            // with the URI of the new book. E.g., /api/books/99, if the new is 99
-            return CreatedAtAction("Get", new { Id = newBook.Id }, newBook);
+            return CreatedAtAction("Get", new {Id = book.Id }, book);
         }
 
-        // TODO: update an existing book
-        // PUT api/books/:id
+        // PUT api/books/5
+        [HttpPut("{id}")]
+        public IActionResult Put(int id, [FromBody] Book updatedBook)
+        {
+            var book = _bookService.Update(updatedBook);
 
-        // TODO: delete an existing book
-        // DELETE api/books/:id
+            if (book == null) return NotFound();
+            return Ok(book);
+        }
+
+        // DELETE api/values/5
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            var book = _bookService.Get(id);
+
+            if (book == null) return NotFound();
+            
+            _bookService.Delete(book);
+
+            return NoContent();
+            
+
+        }
     }
 }
